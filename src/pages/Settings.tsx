@@ -22,7 +22,10 @@ import {
   MapPin,
   Tag,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Calculator,
+  TrendingDown,
+  Percent
 } from 'lucide-react';
 import { mockHelpDeskEmployees, mockVendors } from '../data/mockMainData';
 import { HelpDeskEmployee, Vendor } from '../types';
@@ -65,6 +68,34 @@ export default function Settings() {
     rating: 5,
     responseTime: '',
     hourlyRate: 0
+  });
+
+  // Depreciation settings
+  const [depreciationSettings, setDepreciationSettings] = useState({
+    method: 'straight-line' as 'straight-line' | 'declining-balance' | 'custom',
+    defaultLifespan: {
+      'Electronics': 3,
+      'Furniture': 7,
+      'Vehicles': 5,
+      'Equipment': 5,
+      'Laptop': 3,
+      'Monitor': 5,
+      'Mobile': 2,
+      'Tablet': 3,
+      'Desktop': 4
+    },
+    customRates: {
+      'Electronics': 25,
+      'Furniture': 10,
+      'Vehicles': 20,
+      'Equipment': 15,
+      'Laptop': 30,
+      'Monitor': 15,
+      'Mobile': 40,
+      'Tablet': 25,
+      'Desktop': 20
+    },
+    salvageValuePercentage: 10
   });
 
   // System settings
@@ -186,6 +217,33 @@ export default function Settings() {
     }
   };
 
+  const handleDepreciationSettingChange = (field: string, value: any) => {
+    setDepreciationSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleLifespanChange = (category: string, value: number) => {
+    setDepreciationSettings(prev => ({
+      ...prev,
+      defaultLifespan: {
+        ...prev.defaultLifespan,
+        [category]: value
+      }
+    }));
+  };
+
+  const handleCustomRateChange = (category: string, value: number) => {
+    setDepreciationSettings(prev => ({
+      ...prev,
+      customRates: {
+        ...prev.customRates,
+        [category]: value
+      }
+    }));
+  };
+
   return (
     <>
       {/* Header */}
@@ -294,48 +352,112 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Departments */}
+          {/* Depreciation Settings */}
           <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-xl">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                <TrendingDown className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Departments</h2>
+              <h2 className="text-xl font-bold text-slate-900">Depreciation Settings</h2>
             </div>
             
-            <form onSubmit={handleAddDepartment} className="flex space-x-3 mb-4">
-              <input
-                type="text"
-                value={newDepartment}
-                onChange={(e) => setNewDepartment(e.target.value)}
-                placeholder="Enter new department..."
-                className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
-                required
-              />
-              <button
-                type="submit"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-colors duration-200 flex items-center space-x-2 shadow-lg"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add</span>
-              </button>
-            </form>
-            
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {departments.map((department, index) => (
-                <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-slate-500" />
-                    <span className="text-slate-900 font-medium">{department}</span>
-                  </div>
-                  <button
-                    onClick={() => removeDepartment(index)}
-                    className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors duration-200"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+            <div className="space-y-6">
+              {/* Depreciation Method */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-3">Depreciation Method</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'straight-line', label: 'Straight Line', desc: 'Equal depreciation each year' },
+                    { value: 'declining-balance', label: 'Declining Balance', desc: 'Higher depreciation in early years' },
+                    { value: 'custom', label: 'Custom Rates', desc: 'Set custom annual rates per category' }
+                  ].map((method) => (
+                    <label key={method.value} className="flex items-start space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        value={method.value}
+                        checked={depreciationSettings.method === method.value}
+                        onChange={(e) => handleDepreciationSettingChange('method', e.target.value)}
+                        className="mt-1 text-red-600 focus:ring-red-500"
+                      />
+                      <div>
+                        <div className="font-medium text-slate-900">{method.label}</div>
+                        <div className="text-sm text-slate-600">{method.desc}</div>
+                      </div>
+                    </label>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Salvage Value */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Salvage Value Percentage
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="number"
+                    value={depreciationSettings.salvageValuePercentage}
+                    onChange={(e) => handleDepreciationSettingChange('salvageValuePercentage', parseInt(e.target.value))}
+                    className="w-20 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    min="0"
+                    max="50"
+                  />
+                  <Percent className="w-4 h-4 text-slate-500" />
+                  <span className="text-sm text-slate-600">of original value retained</span>
+                </div>
+              </div>
+
+              {/* Category-specific settings */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  {depreciationSettings.method === 'custom' ? 'Annual Depreciation Rates' : 'Asset Lifespan (Years)'}
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.keys(depreciationSettings.defaultLifespan).map((category) => (
+                    <div key={category} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
+                      <span className="text-sm font-medium text-slate-700">{category}</span>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={depreciationSettings.method === 'custom' 
+                            ? depreciationSettings.customRates[category as keyof typeof depreciationSettings.customRates]
+                            : depreciationSettings.defaultLifespan[category as keyof typeof depreciationSettings.defaultLifespan]
+                          }
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            if (depreciationSettings.method === 'custom') {
+                              handleCustomRateChange(category, value);
+                            } else {
+                              handleLifespanChange(category, value);
+                            }
+                          }}
+                          className="w-16 px-2 py-1 border border-slate-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                          min="1"
+                          max={depreciationSettings.method === 'custom' ? "100" : "20"}
+                        />
+                        <span className="text-xs text-slate-500">
+                          {depreciationSettings.method === 'custom' ? '%' : 'yrs'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Depreciation Calculator Preview */}
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Calculator className="w-5 h-5 text-red-600" />
+                  <h4 className="font-semibold text-red-900">Depreciation Preview</h4>
+                </div>
+                <div className="text-sm text-red-800">
+                  <p>Method: <span className="font-medium capitalize">{depreciationSettings.method.replace('-', ' ')}</span></p>
+                  <p>Salvage Value: <span className="font-medium">{depreciationSettings.salvageValuePercentage}%</span></p>
+                  <p className="mt-2 text-xs">
+                    Example: A $1,000 laptop will depreciate to ${Math.round(1000 * (1 - (depreciationSettings.customRates.Laptop / 100)) * 100) / 100} after 1 year
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

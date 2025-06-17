@@ -9,10 +9,12 @@ interface NavigationProps {
 
 export default function Navigation({ isOpen, setIsOpen }: NavigationProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [maintenanceDropdownOpen, setMaintenanceDropdownOpen] = useState(false);
   const location = useLocation();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+  const toggleMaintenanceDropdown = () => setMaintenanceDropdownOpen(!maintenanceDropdownOpen);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -90,6 +92,7 @@ export default function Navigation({ isOpen, setIsOpen }: NavigationProps) {
                           key={item.path}
                           to={item.path}
                           className="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-blue-400 hover:bg-slate-700/50 transition-colors duration-200"
+                          onClick={() => setDropdownOpen(false)}
                         >
                           <IconComponent className="w-4 h-4" />
                           <span>{item.label}</span>
@@ -101,30 +104,33 @@ export default function Navigation({ isOpen, setIsOpen }: NavigationProps) {
               </div>
 
               {/* Maintenance Dropdown */}
-              <div className="relative">
+              <div className="relative group">
                 <button 
-                  onClick={() => {}} // We'll handle this differently for maintenance
+                  onClick={toggleMaintenanceDropdown}
                   className="flex items-center space-x-2 text-slate-300 hover:text-blue-400 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-slate-800/50"
                 >
                   <Wrench className="w-4 h-4" />
                   <span className="font-medium">Maintenance</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${maintenanceDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-                <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-lg border border-slate-700/50 rounded-xl shadow-xl py-2 z-40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  {maintenanceItems.map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-blue-400 hover:bg-slate-700/50 transition-colors duration-200"
-                      >
-                        <IconComponent className="w-4 h-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
+                {maintenanceDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-lg border border-slate-700/50 rounded-xl shadow-xl py-2 z-40">
+                    {maintenanceItems.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-blue-400 hover:bg-slate-700/50 transition-colors duration-200"
+                          onClick={() => setMaintenanceDropdownOpen(false)}
+                        >
+                          <IconComponent className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <Link
@@ -228,26 +234,35 @@ export default function Navigation({ isOpen, setIsOpen }: NavigationProps) {
             </div>
 
             {/* Mobile Maintenance Items */}
-            <div className="border-t border-slate-700 pt-2 mt-4">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-2">Maintenance</p>
-              {maintenanceItems.map((item) => {
-                const IconComponent = item.icon;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center space-x-3 transition-colors duration-200 px-4 py-3 rounded-lg ${
-                      isActive(item.path) 
-                        ? 'text-blue-400 bg-slate-800/50' 
-                        : 'text-slate-300 hover:text-blue-400 hover:bg-slate-800/50'
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <IconComponent className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
+            <div>
+              <button 
+                onClick={toggleMaintenanceDropdown}
+                className="w-full flex items-center justify-between text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 transition-colors duration-200 px-4 py-3 rounded-lg"
+              >
+                <div className="flex items-center space-x-3">
+                  <Wrench className="w-5 h-5" />
+                  <span className="font-medium">Maintenance</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${maintenanceDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {maintenanceDropdownOpen && (
+                <div className="ml-8 mt-2 space-y-1">
+                  {maintenanceItems.map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className="flex items-center space-x-2 text-slate-400 hover:text-blue-400 transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-slate-800/30"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <Link
